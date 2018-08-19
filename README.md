@@ -4,7 +4,7 @@ Resolvi passar o tempo e treinar Python
 
 ## Resumo
 
-O nome é bem autoexplicativo. É um algorítimo genérico feito em Python.
+O nome é bem autoexplicativo. É um algorítimo genético feito em Python.
 Estou tentando deixar o código bem abrangente e simples de ser adaptado.
 
 ### Pré-requisitos
