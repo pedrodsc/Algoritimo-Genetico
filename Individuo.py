@@ -3,15 +3,6 @@ from pprint import pprint
 
 class Individuo(object):
 
-    cromossomosGray = []
-    cromossomos = []
-
-    numCromossomos = 0
-    intervalos = []
-    resolucao = 0
-
-    fitness = 0
-
     def __init__(self, numCromossomos, intervalos, resolucao, randomizar=False):
         super(Individuo, self).__init__()
 
@@ -21,6 +12,8 @@ class Individuo(object):
         self.numCromossomos = numCromossomos
         self.intervalos = intervalos
         self.resolucao = resolucao
+
+        self.fitness = 0
 
         if randomizar:
             self.cromossomosGray = np.random.randint(2, size=(numCromossomos, resolucao), dtype=np.uint8)

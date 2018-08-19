@@ -6,16 +6,6 @@ from pprint import pprint
 
 class GA(object):
 
-    tamPopulacao = 0
-    numGeracoes = 0
-    numCromossomos = 0
-    intervalos = []
-    populacao = []
-
-    resolucao = 8
-
-    taxaDeMutacao = 0.0025 # Em porcentagem
-
     def __init__(self, tamPopulacao, numGeracoes, numCromossomos, intervalos, resolucao, taxaDeMutacao = 0.5):
         super(GA, self).__init__()
         self.tamPopulacao = tamPopulacao
@@ -25,10 +15,12 @@ class GA(object):
         self.resolucao = resolucao
         self.taxaDeMutacao = taxaDeMutacao / 100
 
+        self.populacao = np.empty(tamPopulacao,dtype=np.object)
+
         for x in range(tamPopulacao):
             tempIndividuo = Individuo(self.numCromossomos,self.intervalos,self.resolucao, randomizar = True)
             tempIndividuo.bin2dec()
-            self.populacao.append(tempIndividuo)
+            self.populacao[x] = tempIndividuo
 
     def calculaFitness(self):
         # TODO: Implementar a função. Ainda à decidir se será com cada individuo ou com a populacao inteira
@@ -44,8 +36,10 @@ class GA(object):
 
 
     def cruzarPopulacao(self, indexDePais):
-
-        populacaoDePais = copy.deepcopy(self.populacao)
+        # Troquei o array de nativo python para numpyself.
+        # O tempo de exceução reduziu em 20%  (~1s para ~800ms)
+        #populacaoDePais = copy.deepcopy(self.populacao)
+        populacaoDePais = np.copy(self.populacao)
         for iterador, filho in enumerate(self.populacao):
             cromossomoTeste = np.ones(shape=(self.numCromossomos,self.resolucao), dtype=np.uint64)
             self.populacao[iterador].receberGenes(self.cruzarIndividuos(populacaoDePais[indexDePais[0][iterador]],populacaoDePais[indexDePais[1][iterador]]))
@@ -84,7 +78,7 @@ class GA(object):
                             indexDePais[iteradorLoopExterno][iteradorLoopInterno] = indexDoIndividuo
                             fitnessTotalAtual = 0
                             break
-
+        # Manter o melhor individuo ajudou nos resultados
         if indexMelhorIndividuo != None:
             indexDePais[0][0] = indexMelhorIndividuo
         return indexDePais
@@ -95,7 +89,7 @@ class GA(object):
             print("Geração: %d ====================================" % (x))
 
             melhorFitness,indexMelhorIndividuo = self.calculaFitness()
-
+            '''
             for iterador, individuo in enumerate(self.populacao):
                 print("F: %.4f" % self.populacao[iterador].fitness,end='\t')
             print("\n")
@@ -105,8 +99,9 @@ class GA(object):
             for iterador, individuo in enumerate(self.populacao):
                 print("Y: %.4f" % self.populacao[iterador].cromossomos[1],end='\t')
             print("\n")
+            '''
             print("Maior fitness: %.4f" % (melhorFitness))
             pais = self.selecionarPais(indexMelhorIndividuo)
-            pprint(pais)
+            #pprint(pais)
             self.cruzarPopulacao(pais)
         #self.cruzarIndividuos(self.populacao[0],self.populacao[1])
