@@ -4,13 +4,13 @@ from GA import GA
 from pprint import pprint
 
 start = time.time()
-
-tamPopulacaoMain = 50
-numCromossomosMain = 2
-numGeracoesMain = 100
-intervaloMain = [[-10,10],[-10,10]]
-resolucaoMain = 16
-taxaDeMutacaoMain = 0.5
+np.random.seed(time.gmtime())
+tamPopulacaoMain = 200
+numCromossomosMain = 3
+numGeracoesMain = 1000
+intervaloMain = [[-10,10],[-10,10],[0,100]]
+resolucaoMain = 32
+taxaDeMutacaoMain = 0.05
 
 
 GA = GA(tamPopulacaoMain, numGeracoesMain, numCromossomosMain, intervaloMain, resolucaoMain, taxaDeMutacaoMain)

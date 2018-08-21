@@ -6,14 +6,15 @@ from pprint import pprint
 
 class GA(object):
 
-    def __init__(self, tamPopulacao, numGeracoes, numCromossomos, intervalos, resolucao, taxaDeMutacao = 0.5):
+    def __init__(self, tamPopulacao, numGeracoes, numCromossomos, intervalos, resolucao, taxaDeMutacao):
         super(GA, self).__init__()
         self.tamPopulacao = tamPopulacao
         self.numGeracoes = numGeracoes
         self.numCromossomos = numCromossomos
         self.intervalos = intervalos
         self.resolucao = resolucao
-        self.taxaDeMutacao = taxaDeMutacao / 100
+        self.taxaDeMutacao = taxaDeMutacao
+        self.numeroDeMutacoes = 0
 
         self.populacao = np.empty(tamPopulacao,dtype=np.object)
 
@@ -29,8 +30,10 @@ class GA(object):
         for iterador, individuo in enumerate(self.populacao):
             X = individuo.cromossomos[0]
             Y = individuo.cromossomos[1]
+            Z = individuo.cromossomos[2]
 
-            self.populacao[iterador].fitness = 2594 - (X + (2 * Y) - 7)**2 + ( (2 * X) + Y - 5)**2
+
+            self.populacao[iterador].fitness = 1 / ((X + 2*Y - 7)**2 + ( 2*X + Y - 5)**2  + (Z - 10)**2)
             if self.populacao[iterador].fitness > maiorPontuacao:
                 maiorPontuacao = self.populacao[iterador].fitness
                 indexMelhorIndividuo = iterador
@@ -53,12 +56,14 @@ class GA(object):
     def cruzarIndividuos(self, A, B):
 
         filho = np.empty(shape=(self.numCromossomos,self.resolucao),dtype=np.uint8)
-        pontosDeCorte = np.random.randint(self.resolucao, size=self.numCromossomos)
+        #pontosDeCorte = np.random.randint(self.resolucao, size=self.numCromossomos)
+        pontosDeCorte = np.ones(self.resolucao, dtype=np.uint8) * (self.resolucao // 2)
 
         for x in range(0,self.numCromossomos):
             filho[x] = np.concatenate((A.cromossomosGray[x][0:pontosDeCorte[x]],B.cromossomosGray[x][pontosDeCorte[x]:self.resolucao]),axis=None)
             if np.random.rand() < self.taxaDeMutacao:
                 filho[x][np.random.randint(self.resolucao)] = filho[x][np.random.randint(self.resolucao)] ^ 1
+                self.numeroDeMutacoes += 1
         return filho
 
     def selecionarPais(self, indexMelhorIndividuo = None):
@@ -87,24 +92,38 @@ class GA(object):
         return indexDePais
 
     def testes(self):
+        numeroDeMutacoesAnt = 0
+        indexMelhorIndividuo = 0
         for x in range(0,self.numGeracoes):
-
+            self.calculaFitness()
             print("Geração: %d ====================================" % (x))
-
+            pais = self.selecionarPais(indexMelhorIndividuo)
+            self.cruzarPopulacao(pais)
             melhorFitness,indexMelhorIndividuo = self.calculaFitness()
-
+            '''
             for iterador, individuo in enumerate(self.populacao):
                 print("F: %.4f" % self.populacao[iterador].fitness,end='\t')
             print("\n")
             for iterador, individuo in enumerate(self.populacao):
-                print("X: %.4f" % self.populacao[iterador].cromossomos[0],end='\t')
+                print("X= %.4f" % self.populacao[iterador].cromossomos[0],end='\t')
             print("\n")
             for iterador, individuo in enumerate(self.populacao):
-                print("Y: %.4f" % self.populacao[iterador].cromossomos[1],end='\t')
+                print("Y= %.4f" % self.populacao[iterador].cromossomos[1],end='\t')
             print("\n")
+            '''
 
-            print("Maior fitness: %.4f" % (melhorFitness))
-            pais = self.selecionarPais(indexMelhorIndividuo)
             #pprint(pais)
-            self.cruzarPopulacao(pais)
+            print("Maior fitness: %.4f" % (melhorFitness))
+            print("Mutações: %d" % (self.numeroDeMutacoes - numeroDeMutacoesAnt))
+            numeroDeMutacoesAnt = self.numeroDeMutacoes
+        print("========= FIM =========")
+        print("Maior fitness: %.4f" % (melhorFitness))
+        X = self.populacao[indexMelhorIndividuo].cromossomos[0]
+        Y = self.populacao[indexMelhorIndividuo].cromossomos[1]
+        Z = self.populacao[indexMelhorIndividuo].cromossomos[2]
+        print("X= %.4f" % X )
+        print("Y= %.4f" % Y )
+        print("Z= %.4f" % Z )
+
+        print(1 / ((X + 2*Y - 7)**2 + ( 2*X + Y - 5)**2) + (Z - 10)**2)
         #self.cruzarIndividuos(self.populacao[0],self.populacao[1])
