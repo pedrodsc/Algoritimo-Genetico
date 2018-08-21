@@ -27,7 +27,10 @@ class GA(object):
         maiorPontuacao = 0
         indexMelhorIndividuo = 0
         for iterador, individuo in enumerate(self.populacao):
-            self.populacao[iterador].fitness = 1/(individuo.cromossomos[0] + individuo.cromossomos[1])
+            X = individuo.cromossomos[0]
+            Y = individuo.cromossomos[1]
+
+            self.populacao[iterador].fitness = 2594 - (X + (2 * Y) - 7)**2 + ( (2 * X) + Y - 5)**2
             if self.populacao[iterador].fitness > maiorPontuacao:
                 maiorPontuacao = self.populacao[iterador].fitness
                 indexMelhorIndividuo = iterador
@@ -89,7 +92,7 @@ class GA(object):
             print("Geração: %d ====================================" % (x))
 
             melhorFitness,indexMelhorIndividuo = self.calculaFitness()
-            '''
+
             for iterador, individuo in enumerate(self.populacao):
                 print("F: %.4f" % self.populacao[iterador].fitness,end='\t')
             print("\n")
@@ -99,7 +102,7 @@ class GA(object):
             for iterador, individuo in enumerate(self.populacao):
                 print("Y: %.4f" % self.populacao[iterador].cromossomos[1],end='\t')
             print("\n")
-            '''
+
             print("Maior fitness: %.4f" % (melhorFitness))
             pais = self.selecionarPais(indexMelhorIndividuo)
             #pprint(pais)

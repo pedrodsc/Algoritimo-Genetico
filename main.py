@@ -5,11 +5,11 @@ from pprint import pprint
 
 start = time.time()
 
-tamPopulacaoMain = 60
+tamPopulacaoMain = 50
 numCromossomosMain = 2
 numGeracoesMain = 100
-intervaloMain = [[0.05,10],[0.05,1]]
-resolucaoMain = 32
+intervaloMain = [[-10,10],[-10,10]]
+resolucaoMain = 16
 taxaDeMutacaoMain = 0.5
 
 
