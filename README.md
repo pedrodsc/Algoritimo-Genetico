@@ -9,7 +9,8 @@ Estou tentando deixar o código bem abrangente e simples de ser adaptado.
 
 ### Pré-requisitos
 
-Por enquanto só o [Numpy](http://www.numpy.org/)
+- [Numpy](http://www.numpy.org/)
+- [OpenCV](https://opencv.org/)
 
 ## Autor 
 
