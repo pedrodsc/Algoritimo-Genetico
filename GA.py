@@ -1,12 +1,9 @@
-import copy
-import cv2
-import math
+import pygame
 import numpy as np
 import time
 from Individuo import Individuo
 from Objeto import Circulo, Retangulo
 from pid import PID
-from pprint import pprint
 
 class GA(object):
 
@@ -30,23 +27,23 @@ class GA(object):
 
     def calculaFitness(self):
         # TODO: Implementar a função. Ainda à decidir se será com cada individuo ou com a populacao inteira
+        # Por enquanto toda a populacao é avaliada, não sendo possível avaliar um único individuo se necessário
         maiorPontuacao = 0
         indexMelhorIndividuo = 0
         for iterador, individuo in enumerate(self.populacao):
             X = individuo.cromossomos[0]
             Y = individuo.cromossomos[1]
             Z = individuo.cromossomos[2]
-            #A = individuo.cromossomos[3]
-            #B = individuo.cromossomos[4]
-            #C = individuo.cromossomos[5]
             
             fit,penality,caiu = self.funcAvaliacao(X,Y,Z,1000)
             self.populacao[iterador].fitness = (fit**2)/(penality)
             
             # Funções obtidas em http://benchmarkfcns.xyz/
+            
             #self.populacao[iterador].fitness = 1 / ((X + 2*Y - 7)**2 + ( 2*X + Y - 5)**2  + (Z - 10)**2) # Booth(modificada)
             #self.populacao[iterador].fitness = 1 / ((1.5-X+X*Y)**2+(2.25-X+X*Y**2)**2+(2.625-X+X*Y**3)**2) #
             #self.populacao[iterador].fitness = (1 / ((4/3)*(((X ** 2 + Y ** 2) - (X * Y))**(0.75)) + Z)) + (1 / ((4/3)*(((A ** 2 + B ** 2) - (A * B))**(0.75)) + C)) # Wolfe
+            
             if self.populacao[iterador].fitness > maiorPontuacao:
                 maiorPontuacao = self.populacao[iterador].fitness
                 indexMelhorIndividuo = iterador
@@ -75,7 +72,8 @@ class GA(object):
         for x in range(0,self.numCromossomos):
             filho[x] = np.concatenate((A.cromossomosGray[x][0:pontosDeCorte[x]],B.cromossomosGray[x][pontosDeCorte[x]:self.resolucao]),axis=None)
             if np.random.rand() < self.taxaDeMutacao:
-                filho[x][np.random.randint(self.resolucao)] = filho[x][np.random.randint(self.resolucao)] ^ 1
+                bitParaMudar = np.random.randint(self.resolucao)
+                filho[x][bitParaMudar] = filho[x][bitParaMudar] ^ 1
                 self.numeroDeMutacoes += 1
         return filho
 
@@ -110,6 +108,9 @@ class GA(object):
         
         numeroDeMutacoesAnt = 0
         indexMelhorIndividuo = 0
+        
+        done = False
+                
         for x in range(0,self.numGeracoes):
             self.calculaFitness()
             print("Gen: %d ====================================" % (x+1))
@@ -122,8 +123,21 @@ class GA(object):
             print("Mutations: %d" % (self.numeroDeMutacoes - numeroDeMutacoesAnt))
             numeroDeMutacoesAnt = self.numeroDeMutacoes
             
-        # SIMULA O MELHOR
-        
+            if done:
+                break
+            
+        ########### ########### ########### ########### ########### ########### ########### ###########
+        # DESENHO         
+        #
+        #
+        # SIMULA O MELHOR de cada geração
+        #
+        #
+        #
+        ########### ########### ########### ########### ########### ########### ########### ###########
+            
+            pygame.init()
+            
             locStartTime = time.time()
             gravity = 4
             theta = -0.001
@@ -135,10 +149,10 @@ class GA(object):
             screenCenter = (int(screenWidth/2),int(screenHeight/2))
             groundHeigth = int(0.8*screenHeight)
 
-            corCeu = (232,218,58)
-            corChao = (71,176,30)
-            corBola = (0,0,197)
-            corPlataforma = (25,97,126)
+            corCeu = (58,218,232)
+            corChao = (30,176,71)
+            corBola = (197,0,0)
+            corPlataforma = (126,97,25)
 
             bola = Circulo(1,screenCenter[0],screenCenter[1],raio,corBola)
 
@@ -155,9 +169,19 @@ class GA(object):
             
             setpoint = plataforma.x
             
-            frame = np.zeros((screenHeight,screenWidth,3),dtype=np.uint8)
+            myfont = pygame.font.SysFont("Comic Sans MS", 30)
+            
+            clock = pygame.time.Clock()
+            
+            screen = pygame.display.set_mode((screenWidth,screenHeight))
+            pygame.display.set_caption('PID')
             caiu = False
-            while not caiu:
+            done = False
+            while not caiu and not done:
+                
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                            done = True
                 ### PID 
                 theta = -meuPID.atualiza(plataforma.x,xc)
                 
@@ -196,30 +220,37 @@ class GA(object):
                         bola.y += bola.velocidade[1]
                         bola.velocidade[1] += gravity
                 # Paisagem
-                frame[:] = corCeu
-                frame = cv2.rectangle(frame,(0,groundHeigth),(screenWidth,screenHeight),corChao,-1)
+                screen.fill(corCeu)
+                pygame.draw.rect(screen, corChao, pygame.Rect(0,groundHeigth,screenWidth,screenHeight))
                 # Plataforma
-                frame = cv2.fillConvexPoly(frame,np.int32(plataforma.pontos),plataforma.cor)
-                cv2.circle(frame,(int(plataforma.x),int(plataforma.y)),5,(0,0,0),-1) 
+                pygame.draw.polygon(screen,plataforma.cor,np.int32(plataforma.pontos))
+                pygame.draw.circle(screen,(0,0,0),(int(plataforma.x),int(plataforma.y)),5) 
                 # Bola
-                cv2.circle(frame,(int(bola.x),int(bola.y)),bola.raio,bola.cor,-1)
+                pygame.draw.circle(screen,bola.cor,(int(bola.x),int(bola.y)),bola.raio)
                 
-                cv2.putText(frame, 'Gen: '+str(x+1), (screenCenter[0]-40,30), cv2.FONT_HERSHEY_COMPLEX, 0.8, (12, 12, 127), 2)
+                text = myfont.render('Gen: '+str(x+1), 1, (12, 12, 127))
+                screen.blit(text, (screenCenter[0]-40,30))
                 
-                cv2.putText(frame, 'X: '+str(int(bola.x)), (20,50), cv2.FONT_HERSHEY_COMPLEX, 0.75, (12, 12, 12), 1)
-                cv2.putText(frame, 'Y: '+str(int(bola.y)), (20,80), cv2.FONT_HERSHEY_COMPLEX, 0.75, (12, 12, 12), 1)
+                text = myfont.render('X: '+str(int(bola.x)), 1, (12, 12, 12))
+                screen.blit(text, (20,50))
+                text = myfont.render('Y: '+str(int(bola.y)), 1, (12, 12, 12))
+                screen.blit(text, (20,80))
                 
-                cv2.putText(frame, 'Kp: '+'{:.4f}'.format(float(kp)), (20,150), cv2.FONT_HERSHEY_COMPLEX, 0.75, (12, 12, 60), 1)
-                cv2.putText(frame, 'Ki: '+'{:.4f}'.format(float(ki)), (20,180), cv2.FONT_HERSHEY_COMPLEX, 0.75, (12, 12, 60), 1)
-                cv2.putText(frame, 'Kd: '+'{:.4f}'.format(float(kd)), (20,210), cv2.FONT_HERSHEY_COMPLEX, 0.75, (12, 12, 60), 1)
+                text = myfont.render('T: '+'{:.3f}'.format(tVivo)+'s', 1, (12, 12, 12))
+                screen.blit(text, (20,110))
+
+                text = myfont.render('Kp: '+'{:.4f}'.format(float(kp)), 1, (100, 12, 12))
+                screen.blit(text, (20,150))
                 
+                text = myfont.render('Ki: '+'{:.4f}'.format(float(ki)), 1, (100, 12, 12))
+                screen.blit(text, (20,180))
                 
-                cv2.putText(frame, 'T: '+'{:.3f}'.format(tVivo)+'s', (20,110), cv2.FONT_HERSHEY_COMPLEX, 0.8, (12, 12, 12), 1)
-                cv2.imshow('PID',frame)
+                text = myfont.render('Kd: '+'{:.4f}'.format(float(kd)), 1, (100, 12, 2))
+                screen.blit(text, (20,210))
                 
-                time.sleep(0.02)
-                k = cv2.waitKey(1)
-                if k == ord('q') or (tVivo > 10):
+                pygame.display.flip()
+                clock.tick(60)
+                if (tVivo > 7):
                     break
                 else:
                     continue
@@ -230,12 +261,7 @@ class GA(object):
         X = self.populacao[indexMelhorIndividuo].cromossomos[0]
         Y = self.populacao[indexMelhorIndividuo].cromossomos[1]
         Z = self.populacao[indexMelhorIndividuo].cromossomos[2]
-        #A = self.populacao[indexMelhorIndividuo].cromossomos[3]
-        #B = self.populacao[indexMelhorIndividuo].cromossomos[4]
-        #C = self.populacao[indexMelhorIndividuo].cromossomos[5]
         print("Kp= %.4f" % X )
         print("Ki= %.4f" % Y )
         print("Kd= %.4f" % Z )
-        #print("A= %.4f" % A )
-        #print("B= %.4f" % B )
-        #print("C= %.4f" % C )
+        pygame.quit()

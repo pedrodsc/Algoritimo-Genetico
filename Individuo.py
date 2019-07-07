@@ -1,5 +1,4 @@
 import numpy as np
-from pprint import pprint
 
 class Individuo(object):
 

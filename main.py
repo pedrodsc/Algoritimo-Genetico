@@ -1,5 +1,4 @@
 import time
-import cv2
 import sys
 import numpy as np
 #from mpl_toolkits.mplot3d import Axes3D
@@ -8,7 +7,6 @@ import numpy as np
 from GA import GA
 from Objeto import Circulo, Retangulo
 from pid import PID
-from pprint import pprint
 
 def simula(kp,ki,kd,divider):
     caiu = False
@@ -35,7 +33,6 @@ def simula(kp,ki,kd,divider):
     bola = Circulo(1,screenCenter[0],screenCenter[1],raio,corBola)
 
     plataforma  = Retangulo(1,screenCenter[0],screenCenter[1],400,10,corPlataforma)
-    #plataforma.rotaciona(-0.1)
     
     meuPID = PID(kp,ki,kd,divider)
     
@@ -76,7 +73,7 @@ def simula(kp,ki,kd,divider):
 
             bola.velocidade[0] *= 0.96
             tVivo = time.time()-startTime
-            #print('X:'+'{:.2f}'.format(bola.x) + ' Y:'+'{:.2f}'.format(bola.y)+ ' m:'+'{:.5f}'.format(m))
+
         else:
             caiu = True
             bola.velocidade[0] = bola.velocidade[0]*0.96
@@ -93,13 +90,14 @@ def simula(kp,ki,kd,divider):
     return (nFrames,SumdToSetpoint,caiu)
 
 start = time.time()
+
 np.random.seed(time.gmtime())
-tamPopulacaoMain = 20
+tamPopulacaoMain = 300
 numCromossomosMain = 3
-numGeracoesMain = 10
+numGeracoesMain = 20
 intervaloMain = [[0,10],[0,10],[0,10]]
-resolucaoMain = 12
-taxaDeMutacaoMain = 0.09
+resolucaoMain = 16
+taxaDeMutacaoMain = 0.1 # 1 = 100%
 
 
 GA = GA(simula,tamPopulacaoMain, numGeracoesMain, numCromossomosMain, intervaloMain, resolucaoMain, taxaDeMutacaoMain)
