@@ -7,10 +7,12 @@ Resolvi passar o tempo e treinar Python
 O nome é bem autoexplicativo. É um algorítimo genético feito em Python.
 Estou tentando deixar o código bem abrangente e simples de ser adaptado.
 
+Aqui tem um exemplo de otimização dos parametros de um PID.
+
 ### Pré-requisitos
 
 - [Numpy](http://www.numpy.org/)
-- [OpenCV](https://opencv.org/)
+- [pygame](https://www.pygame.org/) para o exemplo PID
 
 ## Autor 
 
