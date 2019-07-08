@@ -1,10 +1,10 @@
-# Algoritimo-Genetico
+# Algoritmo-Genetico
 
 Resolvi passar o tempo e treinar Python
 
 ## Resumo
 
-O nome é bem autoexplicativo. É um algorítimo genético feito em Python.
+O nome é bem autoexplicativo. É um algoritmo genético feito em Python.
 Estou tentando deixar o código bem abrangente e simples de ser adaptado.
 
 Aqui tem um exemplo de otimização dos parametros de um PID.
