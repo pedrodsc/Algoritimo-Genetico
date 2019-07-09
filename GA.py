@@ -1,4 +1,3 @@
-import pygame
 import numpy as np
 import time
 from Individuo import Individuo
@@ -17,14 +16,19 @@ class GA(object):
         self.resolucao = resolucao
         self.taxaDeMutacao = taxaDeMutacao
         self.numeroDeMutacoes = 0
-
+        self.indexMelhorIndividuo = 0
+        
         self.populacao = np.empty(tamPopulacao,dtype=np.object)
 
         for x in range(tamPopulacao):
             tempIndividuo = Individuo(self.numCromossomos,self.intervalos,self.resolucao, randomizar = True)
             tempIndividuo.bin2dec()
             self.populacao[x] = tempIndividuo
-
+    
+    def init(self):
+        # Pra evitar redundância no calculo do Fitness nas iterações a geração 0 é calculada aqui.
+        _,self.indexMelhorIndividuo = self.calculaFitness()
+        
     def calculaFitness(self):
         # TODO: Implementar a função. Ainda à decidir se será com cada individuo ou com a populacao inteira
         # Por enquanto toda a populacao é avaliada, não sendo possível avaliar um único individuo se necessário
@@ -35,8 +39,8 @@ class GA(object):
             Y = individuo.cromossomos[1]
             Z = individuo.cromossomos[2]
             
-            fit,penality,caiu = self.funcAvaliacao(X,Y,Z,1000)
-            self.populacao[iterador].fitness = (fit**2)/(penality)
+            fit = self.funcAvaliacao(X,Y,Z,1000)
+            self.populacao[iterador].fitness = fit
             
             # Funções obtidas em http://benchmarkfcns.xyz/
             
@@ -101,167 +105,16 @@ class GA(object):
         if indexMelhorIndividuo != None:
             indexDePais[0][0] = indexMelhorIndividuo
         return indexDePais
-
-    def testes(self):
-        
-        # O nome diz tudo. É uma função pra testes, não implemente assim.
-        
+    
+    def itera(self):
         numeroDeMutacoesAnt = 0
-        indexMelhorIndividuo = 0
         
-        done = False
-                
-        for x in range(0,self.numGeracoes):
-            self.calculaFitness()
-            print("Gen: %d ====================================" % (x+1))
-            pais = self.selecionarPais(indexMelhorIndividuo)
-            self.cruzarPopulacao(pais)
-            melhorFitness,indexMelhorIndividuo = self.calculaFitness()
-
-            #pprint(pais)
-            print("Highest Fitness: %.4f" % (melhorFitness))
-            print("Mutations: %d" % (self.numeroDeMutacoes - numeroDeMutacoesAnt))
-            numeroDeMutacoesAnt = self.numeroDeMutacoes
-            
-            if done:
-                break
-            
-        ########### ########### ########### ########### ########### ########### ########### ###########
-        # DESENHO         
-        #
-        #
-        # SIMULA O MELHOR de cada geração
-        #
-        #
-        #
-        ########### ########### ########### ########### ########### ########### ########### ###########
-            
-            pygame.init()
-            
-            locStartTime = time.time()
-            gravity = 4
-            theta = -0.001
-
-            raio = 20
-            screenHeight = 800
-            screenWidth = 1000
-
-            screenCenter = (int(screenWidth/2),int(screenHeight/2))
-            groundHeigth = int(0.8*screenHeight)
-
-            corCeu = (58,218,232)
-            corChao = (30,176,71)
-            corBola = (197,0,0)
-            corPlataforma = (126,97,25)
-
-            bola = Circulo(1,screenCenter[0],screenCenter[1],raio,corBola)
-
-            plataforma  = Retangulo(1,screenCenter[0],screenCenter[1],400,10,corPlataforma)
-            
-            kp = self.populacao[indexMelhorIndividuo].cromossomos[0]
-            ki = self.populacao[indexMelhorIndividuo].cromossomos[1]
-            kd = self.populacao[indexMelhorIndividuo].cromossomos[2]
-            
-            meuPID = PID(kp,ki,kd,1000)
-            
-            xc = plataforma.x + 100
-            yc = plataforma.y
-            
-            setpoint = plataforma.x
-            
-            myfont = pygame.font.SysFont("Comic Sans MS", 30)
-            
-            clock = pygame.time.Clock()
-            
-            screen = pygame.display.set_mode((screenWidth,screenHeight))
-            pygame.display.set_caption('PID')
-            caiu = False
-            done = False
-            while not caiu and not done:
-                
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                            done = True
-                ### PID 
-                theta = -meuPID.atualiza(plataforma.x,xc)
-                
-                ### Plataforma
-                p0 = plataforma.pontos[0]
-                p1 = plataforma.pontos[1]
-                m = (p1[1] - p0[1])/(p1[0] - p0[0]) if (p1[0] != p0[0]) else 100
-                phi = np.arctan(m)
-                plataforma.rotaciona(theta[0]+phi) 
-                ### Bola
-                # xc = x de contato com a plataforma
-                # yc = y de contato com a plataforma
-                
-                # Interação bola e plataforma
-                
-                if (screenCenter[0] - np.cos(phi)*(plataforma.largura/2) < bola.x < screenCenter[0] + np.cos(phi)*(plataforma.largura/2) and caiu == 0):
-                    
-                    xc += bola.velocidade[0] + bola.velocidade[1]*np.sin(phi)
-                    
-                    yc = m*(xc-plataforma.x) - np.cos(phi)*plataforma.comprimento/2 + plataforma.y
-                    
-                    bola.x = xc + bola.raio*np.sin(phi)
-                    bola.y = yc - bola.raio*np.cos(phi)
-                    
-                    bola.velocidade[0] += np.sin(phi)*gravity/3
-                    bola.velocidade[0] *= 0.96
-                    tVivo = time.time()-locStartTime
-                    #print('X:'+'{:.2f}'.format(bola.x) + ' Y:'+'{:.2f}'.format(bola.y)+ ' m:'+'{:.5f}'.format(m))
-                else:
-                    caiu = True
-                    bola.velocidade[0] = bola.velocidade[0]*0.96
-                    bola.x += bola.velocidade[0]
-                    if (bola.y + bola.raio >= groundHeigth):
-                        bola.velocidade[1] = -bola.velocidade[1]*0.9
-                    else:
-                        bola.y += bola.velocidade[1]
-                        bola.velocidade[1] += gravity
-                # Paisagem
-                screen.fill(corCeu)
-                pygame.draw.rect(screen, corChao, pygame.Rect(0,groundHeigth,screenWidth,screenHeight))
-                # Plataforma
-                pygame.draw.polygon(screen,plataforma.cor,np.int32(plataforma.pontos))
-                pygame.draw.circle(screen,(0,0,0),(int(plataforma.x),int(plataforma.y)),5) 
-                # Bola
-                pygame.draw.circle(screen,bola.cor,(int(bola.x),int(bola.y)),bola.raio)
-                
-                text = myfont.render('Gen: '+str(x+1), 1, (12, 12, 127))
-                screen.blit(text, (screenCenter[0]-40,30))
-                
-                text = myfont.render('X: '+str(int(bola.x)), 1, (12, 12, 12))
-                screen.blit(text, (20,50))
-                text = myfont.render('Y: '+str(int(bola.y)), 1, (12, 12, 12))
-                screen.blit(text, (20,80))
-                
-                text = myfont.render('T: '+'{:.3f}'.format(tVivo)+'s', 1, (12, 12, 12))
-                screen.blit(text, (20,110))
-
-                text = myfont.render('Kp: '+'{:.4f}'.format(float(kp)), 1, (100, 12, 12))
-                screen.blit(text, (20,150))
-                
-                text = myfont.render('Ki: '+'{:.4f}'.format(float(ki)), 1, (100, 12, 12))
-                screen.blit(text, (20,180))
-                
-                text = myfont.render('Kd: '+'{:.4f}'.format(float(kd)), 1, (100, 12, 2))
-                screen.blit(text, (20,210))
-                
-                pygame.display.flip()
-                clock.tick(60)
-                if (tVivo > 7):
-                    break
-                else:
-                    continue
-            
-            
-        print("========= END =========")
-        print("Maior fitness: %.4f" % (melhorFitness))
-        X = self.populacao[indexMelhorIndividuo].cromossomos[0]
-        Y = self.populacao[indexMelhorIndividuo].cromossomos[1]
-        Z = self.populacao[indexMelhorIndividuo].cromossomos[2]
-        print("Kp= %.4f" % X )
-        print("Ki= %.4f" % Y )
-        print("Kd= %.4f" % Z )
-        pygame.quit()
+        numeroDeMutacoesAnt = self.numeroDeMutacoes
+        
+        pais = self.selecionarPais(self.indexMelhorIndividuo)
+        self.cruzarPopulacao(pais)
+        melhorFitness,self.indexMelhorIndividuo = self.calculaFitness()
+        
+        totalMutacoes = self.numeroDeMutacoes - numeroDeMutacoesAnt
+        
+        return melhorFitness,self.indexMelhorIndividuo,totalMutacoes
