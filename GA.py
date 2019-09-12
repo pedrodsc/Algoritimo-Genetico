@@ -30,23 +30,14 @@ class GA(object):
         _,self.indexMelhorIndividuo = self.calculaFitness()
         
     def calculaFitness(self):
-        # TODO: Implementar a função. Ainda à decidir se será com cada individuo ou com a populacao inteira
-        # Por enquanto toda a populacao é avaliada, não sendo possível avaliar um único individuo se necessário
+
         maiorPontuacao = 0
         indexMelhorIndividuo = 0
+        
         for iterador, individuo in enumerate(self.populacao):
-            X = individuo.cromossomos[0]
-            Y = individuo.cromossomos[1]
-            Z = individuo.cromossomos[2]
             
-            fit = self.funcAvaliacao(X,Y,Z,1000)
+            fit = self.funcAvaliacao(individuo)
             self.populacao[iterador].fitness = fit
-            
-            # Funções obtidas em http://benchmarkfcns.xyz/
-            
-            #self.populacao[iterador].fitness = 1 / ((X + 2*Y - 7)**2 + ( 2*X + Y - 5)**2  + (Z - 10)**2) # Booth(modificada)
-            #self.populacao[iterador].fitness = 1 / ((1.5-X+X*Y)**2+(2.25-X+X*Y**2)**2+(2.625-X+X*Y**3)**2) #
-            #self.populacao[iterador].fitness = (1 / ((4/3)*(((X ** 2 + Y ** 2) - (X * Y))**(0.75)) + Z)) + (1 / ((4/3)*(((A ** 2 + B ** 2) - (A * B))**(0.75)) + C)) # Wolfe
             
             if self.populacao[iterador].fitness > maiorPontuacao:
                 maiorPontuacao = self.populacao[iterador].fitness
@@ -102,8 +93,8 @@ class GA(object):
                             fitnessTotalAtual = 0
                             break
         # Manter o melhor individuo ajudou nos resultados
-        if indexMelhorIndividuo != None:
-            indexDePais[0][0] = indexMelhorIndividuo
+        #if indexMelhorIndividuo != None:
+        #    indexDePais[0][0] = indexMelhorIndividuo
         return indexDePais
     
     def itera(self):

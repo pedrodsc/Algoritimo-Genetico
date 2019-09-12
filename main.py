@@ -2,11 +2,12 @@ import time
 import sys
 import pygame
 import numpy as np
-#from mpl_toolkits.mplot3d import Axes3D
-#import matplotlib.pyplot as plt
-#from matplotlib import cm
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 from GA import GA
 from Objeto import Circulo, Retangulo
+from Individuo import Individuo
 from pid import PID
 
 # Parâmetros do GA
@@ -43,19 +44,21 @@ myfont = pygame.font.SysFont("Comic Sans MS", 30)
 
 clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((screenWidth,screenHeight))
-pygame.display.set_caption('PID')
-
 # Função de avaliação
 
-def funcAvaliacao(kp,ki,kd,divider):
+def funcAvaliacao(individuo):
     caiu = False
+    
+    divider = 1000
+    
+    kp = individuo.cromossomos[0]
+    ki = individuo.cromossomos[1]
+    kd = individuo.cromossomos[2]
     
     startTime = time.time()
     tVivo = 0
     nFrames = 0
     gravity = 4
-    #theta = 0.52359 # pi/6 = 30 graus
     theta = -0.001
     SumdToSetpoint = 0
     raio = 20
@@ -146,6 +149,9 @@ def simula(initalPos,kp,ki,kd,divider):
     caiu = False
     done = False
     locStartTime = time.time()
+    
+    screen = pygame.display.set_mode((screenWidth,screenHeight))
+    pygame.display.set_caption('PID')
     while not caiu and not done:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -232,15 +238,36 @@ print("Population size: "+str(tamPopulacaoMain))
 
 GA.init()
 
+Kps = np.empty((tamPopulacaoMain,1))
+Kis = np.empty((tamPopulacaoMain,1))
+Kds = np.empty((tamPopulacaoMain,1))
+    
+for iterador, individuo in enumerate(GA.populacao):
+    Kps[iterador] = individuo.cromossomos[0]
+    Kis[iterador] = individuo.cromossomos[1]
+    Kds[iterador] = individuo.cromossomos[2]
+colors = np.zeros((tamPopulacaoMain,3))
+area = np.pi*3
+
+# Plot
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(Kps,Kis,Kds, s=area, c=colors, alpha=0.3,marker='o')
+ax.set_xlabel('Kp')
+ax.set_ylabel('Kd')
+ax.set_zlabel('Ki')
+ax.axis([0,10,0,10])
+plt.show(block=False)
+plt.pause(1)
 done = False
+
 for x in range(0,GA.numGeracoes):
    
     print("Gen: %d ====================================" % (x+1))
     melhorFitness,indexMelhorIndividuo,totalMutacoes = GA.itera()
 
-    print("Highest Fitness: %.4f" % (melhorFitness))
-    print("Mutations: %d" % (totalMutacoes))
-    
+    #plt.clf()
+    plt.cla()
     if done:
         break
     
@@ -253,15 +280,35 @@ for x in range(0,GA.numGeracoes):
     initalPos = 0.5
     done = simula(initalPos,kp,ki,kd,dividerMain)
     
+    
+    
+    for iterador, individuo in enumerate(GA.populacao):
+        Kps[iterador] = individuo.cromossomos[0]
+        Kds[iterador] = individuo.cromossomos[2]
+        colors[iterador] = [(individuo.fitness)/42.0,(individuo.fitness)/42,0]
+    area = np.pi*3
+    # Plot
+    ax.scatter(Kps,Kis,Kds, s=area, c=colors, alpha=0.3,marker='o')
 
+    ax.set_xlabel('Kp')
+    ax.set_ylabel('Kd')
+    ax.set_zlabel('Ki')
+    ax.axis([0,10,0,10])
+    print("Highest Fitness: %.4f" % (melhorFitness))
+    print("Kp= %.4f" % kp )
+    print("Ki= %.4f" % ki )
+    print("Kd= %.4f" % kd )
+    print("Mutations: %d" % (totalMutacoes))
+
+    plt.show(block=False)
+    plt.pause(1)
+    plt.close()
+    
 print("========= END =========")
-print("Maior fitness: %.4f" % (melhorFitness))
-X = GA.populacao[indexMelhorIndividuo].cromossomos[0]
-Y = GA.populacao[indexMelhorIndividuo].cromossomos[1]
-Z = GA.populacao[indexMelhorIndividuo].cromossomos[2]
-print("Kp= %.4f" % X )
-print("Ki= %.4f" % Y )
-print("Kd= %.4f" % Z )
+print("Highest fitness: %.4f" % (melhorFitness))
+print("Kp= %.4f" % kp )
+print("Ki= %.4f" % ki )
+print("Kd= %.4f" % kd )
 
 print("Elapsed time: ",end='')
 print(time.time() - start)
